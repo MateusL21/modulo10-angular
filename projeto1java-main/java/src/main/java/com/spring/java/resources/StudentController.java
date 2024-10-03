@@ -1,39 +1,35 @@
 package com.spring.java.resources;
 
 import java.net.URI;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
-import org.springframework.http.HttpStatus;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import com.spring.java.models.Student;
+import com.spring.java.services.StudentService;
 
-import jakarta.annotation.PostConstruct;
 
 @RestController
 @CrossOrigin
 public class StudentController {
 
-    private List<Student> students = new ArrayList<>(Arrays.asList(
-        new Student(1, "Marcos", "marcos@abutua.com", "(11) 9898-3232", 2, "Tarde"),
-        new Student(2, "Mateus", "mateus@abutua.com", "(11) 8888-3333", 3, "Noite"),
-        new Student(3, "Carlos", "carlos@abutua.com", "(11) 9999-2323", 1, "Manhã")
-    ));
-    
+    @Autowired
+    private StudentService studentService;
+
     @PostMapping("students")
     public ResponseEntity<Student> save(@RequestBody Student student) {
-        student.setId(students.size() + 1);
-        students.add(student);
+        
+        student = studentService.save(student);
 
         URI location = ServletUriComponentsBuilder
                 .fromCurrentRequest()
@@ -47,18 +43,30 @@ public class StudentController {
 
     @GetMapping("students/{id}")
     public ResponseEntity<Student> getStudent(@PathVariable int id) {
-
-        Student stud = students.stream()
-                .filter(s -> s.getId() == id)
-                .findFirst()
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Student not found"));
-
-        return ResponseEntity.ok(stud);
+        Student student = studentService.getById(id);
+       
+        return ResponseEntity.ok(student);
     }
+
 
     @GetMapping("students")
     public List<Student> getStudents() {
-        return students;
+        return studentService.getAll();
+       
+    }
+
+    @DeleteMapping("students/{id}")
+    public ResponseEntity<Void> removeStudent(@PathVariable int id) {
+
+        studentService.deleteById(id);
+
+        return ResponseEntity.noContent().build();
+    }
+
+    @PutMapping("students/{id}")
+    public ResponseEntity<Void> updateStudent(@PathVariable int id, @RequestBody Student studentUpdate) {
+        studentService.update(id, studentUpdate);
+        return ResponseEntity.ok().build(); 
     }
 
 }
